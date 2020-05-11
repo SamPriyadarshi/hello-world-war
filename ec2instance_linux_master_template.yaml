@@ -59,30 +59,39 @@ Metadata:
 Parameters:
   ApplicationId:
     Type: String
+    Default: sldjnsi3232
   Application:
     Description: Name of the Application
     Type: String
+    Default: Java application
   Environment:
     Description: The type of Env. For Ex- PROD, TEST, STG, NON-PROD
     Type: String
+    Default: Dev
   InstanceName:
     Description: Mention the name for your EC2 Instance
     Type: String
+    Default: Sam-Java
   EC2KeyPair:
     Description: Mention KeyPair to Assign to EC2 Instances or leave blank
     Type: String
+    Default: DataPipeline
   PolicyName:
     Description: Enter the Policy Name.Else leave blank
     Type: String
+    Default: arn:aws:iam::aws:policy/AdministratorAccess
   VPC:
     Description: The ID of your existing VPC (e.g., vpc-0343606e)
     Type: AWS::EC2::VPC::Id
+    Default: vpc-a961dfd3
   Subnet:
     Description: Choose the Subnet to Deploy Instances.
     Type: AWS::EC2::Subnet::Id
+    Default: subnet-73c7ae5d
   SecurityGroup:
     Description: Select an existing security group.
     Type: AWS::EC2::SecurityGroup::Id
+    Default: sg-cdbb6689
   OperatingSystem:
     Description: Choose an Amazon Machine Image
     Type: String
@@ -355,7 +364,8 @@ Resources:
           \  sudo rpm -U ./amazon-cloudwatch-agent.rpm\n  aws s3 cp s3://mc-dev1-blueprints/ec2instance/scripts/config.json\
           \  /opt/aws/amazon-cloudwatch-agent/bin/config.json\n  sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl\
           \ -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/bin/config.json\
-          \ -s\n\nfi\n"
+          \ -s\n\nfi\n\
+          \ aws s3 cp s3://sam-githubaction ."
       InstanceType: !Ref 'InstanceType'
       IamInstanceProfile: !Ref 'IamInstanceProfile'
       ImageId: !FindInMap
