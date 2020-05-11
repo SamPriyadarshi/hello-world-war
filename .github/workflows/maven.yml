@@ -52,3 +52,4 @@ jobs:
       with:
         name: MyStack
         template: ec2instance_linux_master_template.yaml
+        capabilities: CAPABILITY_NAMED_IAM
