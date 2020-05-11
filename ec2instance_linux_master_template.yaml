@@ -346,6 +346,7 @@ Resources:
           tomcatdown
           cd /opt/apache-tomcat-8.5.35/webapps/
           aws s3 cp s3://sam-githubaction/hello-world-war-1.0.0.war .
+          sleep 10
           tomcatup
       InstanceType: !Ref 'InstanceType'
       IamInstanceProfile: !Ref 'IamInstanceProfile'
