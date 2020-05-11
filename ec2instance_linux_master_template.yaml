@@ -79,7 +79,7 @@ Parameters:
   PolicyName:
     Description: Enter the Policy Name.Else leave blank
     Type: String
-    Default: arn:aws:iam::aws:policy/AdministratorAccess
+    Default: AdministratorAccess
   VPC:
     Description: The ID of your existing VPC (e.g., vpc-0343606e)
     Type: AWS::EC2::VPC::Id
