@@ -35,4 +35,4 @@ jobs:
     - uses: actions/download-artifact@master
       with: 
         name: Package
-        path: /home/runner/work/hello-world-war/hello-world-war/target/hello-world-war-1.0.0.war
+        path: staging
