@@ -27,4 +27,12 @@ jobs:
       with:
         name: Package
         path: staging
-
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/download-artifact@master
+      with: 
+        name: Package
+        path: /home/runner/work/hello-world-war/hello-world-war/target/hello-world-war-1.0.0.war
