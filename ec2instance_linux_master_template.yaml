@@ -26,7 +26,6 @@ Metadata:
           default: Optional Parameters
         Parameters:
           - EC2KeyPair
-          - PolicyName
     ParameterLabels:
       Application:
         default: Application
@@ -52,8 +51,6 @@ Metadata:
         default: EBS Optimized
       BlockDeviceDeleteOnTermination:
         default: Block Device DeleteOn Termination
-      PolicyName:
-        default: Policy Name
       InstanceType:
         default: Instance Type
 Parameters:
@@ -76,10 +73,6 @@ Parameters:
     Description: Mention KeyPair to Assign to EC2 Instances or leave blank
     Type: String
     Default: DataPipeline
-  PolicyName:
-    Description: Enter the Policy Name.Else leave blank
-    Type: String
-    Default: AdministratorAccess
   VPC:
     Description: The ID of your existing VPC (e.g., vpc-0343606e)
     Type: AWS::EC2::VPC::Id
@@ -293,10 +286,6 @@ Conditions:
     - !Equals
       - !Ref 'EC2KeyPair'
       - ''
-  Policy: !Not
-    - !Equals
-      - !Ref 'PolicyName'
-      - ''
 Resources:
   IamInstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -316,15 +305,11 @@ Resources:
                 - ec2.amazonaws.com
             Action:
               - sts:AssumeRole
-      ManagedPolicyArns: !If
-        - Policy
-        - - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
-          - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
-          - arn:aws:iam::aws:policy/AmazonSSMFullAccess
-          - !Sub 'arn:aws:iam::${AWS::AccountId}:policy/${PolicyName}'
-        - - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
-          - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
-          - arn:aws:iam::aws:policy/AmazonSSMFullAccess
+      ManagedPolicyArns: 
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
+        - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
+        - arn:aws:iam::aws:policy/AmazonSSMFullAccess
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
       RoleName: !Sub '${AWS::StackName}-EC2Role'
   EC2Instance:
     Type: AWS::EC2::Instance
@@ -337,35 +322,29 @@ Resources:
             VolumeType: !Ref 'EC2VolumeType'
       EbsOptimized: !Ref 'EBSOptimized'
       UserData: !Base64
-        Fn::Sub: "#!/bin/bash\nif [[ \"${OperatingSystem}\" == \"AmazonLinux2\"  ||\
-          \  \"${OperatingSystem}\" == \"AmazonLinuxHVM\" ]] ; then\n  wget https://s3.amazonaws.com/amazoncloudwatch-agent/linux/amd64/latest/AmazonCloudWatchAgent.zip\n\
-          \  unzip AmazonCloudWatchAgent.zip\n  sudo ./install.sh\n  aws s3 cp s3://mc-dev1-blueprints/ec2instance/scripts/config.json\
-          \  /opt/aws/amazon-cloudwatch-agent/bin/config.json\n  sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl\
-          \ -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/bin/config.json\
-          \ -s\n\nelif [ \"${OperatingSystem}\" == \"UbuntuServerHVM\" ] ; then\n\
-          \  wget https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb\n\
-          \  sudo dpkg -i -E ./amazon-cloudwatch-agent.deb\n  apt-get update -y\n\
-          \  apt-get  install -y python-pip\n  pip install awscli\n  aws s3 cp s3://mc-dev1-blueprints/ec2instance/scripts/config.json\
-          \  /opt/aws/amazon-cloudwatch-agent/bin/config.json\n  sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl\
-          \ -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/bin/config.json\
-          \ -s\n\n\nelif [ \"${OperatingSystem}\" == \"RedHatEnterpriseLinux8\" ]\
-          \ ; then\n\n  sudo yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm\n\
-          \  sudo systemctl enable amazon-ssm-agent\n  sudo systemctl start amazon-ssm-agent\
-          \ \n\n  rpm -Uvh https://s3.amazonaws.com/amazoncloudwatch-agent/redhat/amd64/latest/amazon-cloudwatch-agent.rpm\n\
-          \  yum update -y\n  dnf install -y  python3\n  curl \"https://bootstrap.pypa.io/get-pip.py\"\
-          \ -o \"get-pip.py\"\n  python3 get-pip.py\n  pip install awscli\n  aws s3\
-          \ cp s3://mc-dev1-blueprints/ec2instance/scripts/config.json  /opt/aws/amazon-cloudwatch-agent/bin/config.json\n\
-          \  sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl\
-          \ -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/bin/config.json\
-          \ -s\n\n\n\nelif [ \"${OperatingSystem}\" == \"SUSELinuxEnterpriseServer15\"\
-          \ ] ; then\n\n\n  wget https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm\n\
-          \  sudo rpm --install amazon-ssm-agent.rpm\n  sudo systemctl enable amazon-ssm-agent\n\
-          \  sudo systemctl start amazon-ssm-agent\n\n  wget https://s3.amazonaws.com/amazoncloudwatch-agent/suse/amd64/latest/amazon-cloudwatch-agent.rpm\n\
-          \  sudo rpm -U ./amazon-cloudwatch-agent.rpm\n  aws s3 cp s3://mc-dev1-blueprints/ec2instance/scripts/config.json\
-          \  /opt/aws/amazon-cloudwatch-agent/bin/config.json\n  sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl\
-          \ -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/bin/config.json\
-          \ -s\n\nfi\n\
-          \ aws s3 cp s3://sam-githubaction ."
+        Fn::Sub: |
+          #!/bin/bash -xe
+          amazon-linux-extras enable corretto8
+          yum install java-1.8.0-amazon-corretto-devel
+          cd /opt
+          wget https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.35/bin/apache-tomcat-8.5.35.tar.gz
+          tar -xvzf /opt/apache-tomcat-8.5.35.tar.gz
+          chmod +x /opt/apache-tomcat-8.5.35/bin/startup.sh shutdown.sh
+          ln -s /opt/apache-tomcat-8.5.35/bin/startup.sh /usr/local/bin/tomcatup
+          ln -s /opt/apache-tomcat-8.5.35/bin/shutdown.sh /usr/local/bin/tomcatdown
+          tomcatup
+          cat << EOF >  /opt/apache-tomcat-8.5.35/conf/tomcat-users.xml
+          <role rolename="manager-gui"/>
+          <role rolename="manager-script"/>
+          <role rolename="manager-jmx"/>
+          <role rolename="manager-status"/>
+          <user username="admin" password="admin" roles="manager-gui, manager-script, manager-jmx, manager-status"/>
+          <user username="deployer" password="deployer" roles="manager-script"/>
+          <user username="tomcat" password="s3cret" roles="manager-gui"/>
+          EOF
+          tomcatdown
+          aws s3 cp s3://sam-githubaction /opt/apache-tomcat-8.5.35/webapps"
+          tomcatup
       InstanceType: !Ref 'InstanceType'
       IamInstanceProfile: !Ref 'IamInstanceProfile'
       ImageId: !FindInMap
