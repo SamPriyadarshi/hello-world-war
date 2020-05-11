@@ -1,3 +1,5 @@
+#This template install Tomcat and deploys a Hello World war file stored in S3 bucket
+
 AWSTemplateFormatVersion: '2010-09-09'
 Description: Creates an Amazon EC2 instance
 Metadata:
@@ -346,7 +348,7 @@ Resources:
           tomcatdown
           cd /opt/apache-tomcat-8.5.35/webapps/
           aws s3 cp s3://sam-githubaction/hello-world-war-1.0.0.war .
-          sleep 10
+          sleep 5
           tomcatup
       InstanceType: !Ref 'InstanceType'
       IamInstanceProfile: !Ref 'IamInstanceProfile'
