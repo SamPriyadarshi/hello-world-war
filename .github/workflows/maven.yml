@@ -51,5 +51,6 @@ jobs:
       uses: aws-actions/aws-cloudformation-github-deploy@v1
       with:
         name: MyStack
+        # This template installs Tomcat and deploys the war file built in the above step
         template: ec2instance_linux_master_template.yaml
         capabilities: CAPABILITY_NAMED_IAM
