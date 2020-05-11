@@ -325,10 +325,11 @@ Resources:
         Fn::Sub: |
           #!/bin/bash -xe
           amazon-linux-extras enable corretto8
-          yum install java-1.8.0-amazon-corretto-devel
+          yum install java-1.8.0-amazon-corretto-devel -y
           cd /opt
           wget https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.35/bin/apache-tomcat-8.5.35.tar.gz
           tar -xvzf /opt/apache-tomcat-8.5.35.tar.gz
+          chmod +x /opt/apache-tomcat-8.5.35/bin/startup.sh
           chmod +x /opt/apache-tomcat-8.5.35/bin/startup.sh shutdown.sh
           ln -s /opt/apache-tomcat-8.5.35/bin/startup.sh /usr/local/bin/tomcatup
           ln -s /opt/apache-tomcat-8.5.35/bin/shutdown.sh /usr/local/bin/tomcatdown
@@ -343,7 +344,8 @@ Resources:
           <user username="tomcat" password="s3cret" roles="manager-gui"/>
           EOF
           tomcatdown
-          aws s3 cp s3://sam-githubaction /opt/apache-tomcat-8.5.35/webapps"
+          cd /opt/apache-tomcat-8.5.35/webapps/
+          aws s3 cp s3://sam-githubaction/hello-world-war-1.0.0.war .
           tomcatup
       InstanceType: !Ref 'InstanceType'
       IamInstanceProfile: !Ref 'IamInstanceProfile'
