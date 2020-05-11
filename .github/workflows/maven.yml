@@ -47,3 +47,8 @@ jobs:
     - name: Copy files to S3 with the AWS CLI
       run: |
         aws s3 sync /home/runner/work/hello-world-war/hello-world-war/staging s3://sam-githubaction
+    - name: Deploy to AWS CloudFormation
+      uses: aws-actions/aws-cloudformation-github-deploy@v1
+      with:
+        name: MyStack
+        template: ec2instance_linux_master_template.yaml
