@@ -1,16 +1,9 @@
 #This template install Tomcat and deploys a Hello World war file stored in S3 bucket
 
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Creates an Amazon EC2 instance
+Description: Creates an Amazon EC2 instance with Tomcat installed and deploys a WAR file from specified S3 bucket
 Metadata:
   AWS::CloudFormation::Interface:
-    ParameterGroups:
-      - Label:
-          default: Application Configurations
-        Parameters:
-          - Application
-          - Environment
-          - ApplicationId
       - Label:
           default: Instance Configurations
         Parameters:
@@ -29,10 +22,6 @@ Metadata:
         Parameters:
           - EC2KeyPair
     ParameterLabels:
-      Application:
-        default: Application
-      Environment:
-        default: Environment
       VPC:
         default: VPC ID
       Subnet:
@@ -56,17 +45,6 @@ Metadata:
       InstanceType:
         default: Instance Type
 Parameters:
-  ApplicationId:
-    Type: String
-    Default: sldjnsi3232
-  Application:
-    Description: Name of the Application
-    Type: String
-    Default: Java application
-  Environment:
-    Description: The type of Env. For Ex- PROD, TEST, STG, NON-PROD
-    Type: String
-    Default: Dev
   InstanceName:
     Description: Mention the name for your EC2 Instance
     Type: String
@@ -78,15 +56,15 @@ Parameters:
   VPC:
     Description: The ID of your existing VPC (e.g., vpc-0343606e)
     Type: AWS::EC2::VPC::Id
-    Default: vpc-a961dfd3
+    Default: <VPC-ID>
   Subnet:
     Description: Choose the Subnet to Deploy Instances.
     Type: AWS::EC2::Subnet::Id
-    Default: subnet-73c7ae5d
+    Default: <Subnet-Id>
   SecurityGroup:
     Description: Select an existing security group.
     Type: AWS::EC2::SecurityGroup::Id
-    Default: sg-cdbb6689
+    Default: <Security Group>
   OperatingSystem:
     Description: Choose an Amazon Machine Image
     Type: String
@@ -347,7 +325,7 @@ Resources:
           EOF
           tomcatdown
           cd /opt/apache-tomcat-8.5.35/webapps/
-          aws s3 cp s3://sam-githubaction/hello-world-war-1.0.0.war .
+          aws s3 cp s3://<S3BucketName>/hello-world-war-1.0.0.war .
           sleep 5
           tomcatup
       InstanceType: !Ref 'InstanceType'
@@ -370,8 +348,6 @@ Resources:
       Tags:
         - Key: Name
           Value: !Ref 'InstanceName'
-        - Key: ApplicationId
-          Value: !Ref 'ApplicationId'
 Outputs:
   InstancePrivateIp:
     Description: Instance Private IP Address.
